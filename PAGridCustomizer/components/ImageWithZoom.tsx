@@ -11,14 +11,34 @@ interface ImageWithZoomProps {
   zoomFactor?: number;
 }
 
-// Global state to track the currently zoomed image and component
-let currentZoomedSrc: string | null = null;
-let currentZoomSetShowZoom: ((value: boolean) => void) | null = null;
-let portalRootElement: HTMLElement | null = null;
+// Global state management for zoom windows
+interface GlobalZoomState {
+  isZoomActive: boolean;
+  activeImageSrc: string | null;
+  activeSetShowZoom: ((value: boolean) => void) | null;
+  portalRoot: HTMLElement | null;
+}
+
+// Single global state object
+const globalZoomState: GlobalZoomState = {
+  isZoomActive: false,
+  activeImageSrc: null,
+  activeSetShowZoom: null,
+  portalRoot: null
+};
+
+// Function to close any active zoom window
+const closeActiveZoom = () => {
+  if (globalZoomState.activeSetShowZoom && globalZoomState.isZoomActive) {
+    globalZoomState.activeSetShowZoom(false);
+    globalZoomState.isZoomActive = false;
+    globalZoomState.activeImageSrc = null;
+  }
+};
 
 // Create a portal element for the zoom overlay to ensure it's rendered at the document root
 const createPortalRoot = () => {
-  if (portalRootElement) return portalRootElement;
+  if (globalZoomState.portalRoot) return globalZoomState.portalRoot;
   
   const portalRoot = document.createElement('div');
   portalRoot.id = 'zoom-portal-root';
@@ -30,7 +50,7 @@ const createPortalRoot = () => {
   portalRoot.style.zIndex = '10000'; // Very high z-index
   portalRoot.style.pointerEvents = 'none';
   document.body.appendChild(portalRoot);
-  portalRootElement = portalRoot;
+  globalZoomState.portalRoot = portalRoot;
   return portalRoot;
 };
 
@@ -61,11 +81,18 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
     const root = createPortalRoot();
     setPortalRoot(root);
     
+    // If this is the active zoomed image when mounting, update local state
+    if (globalZoomState.isZoomActive && globalZoomState.activeImageSrc === src) {
+      setShowZoom(true);
+    }
+    
     // Clean up on unmount
     return () => {
       // If this component is showing zoom and gets unmounted, clear the global state
-      if (showZoom && currentZoomedSrc === src) {
-        currentZoomedSrc = null;
+      if (showZoom && globalZoomState.activeImageSrc === src) {
+        globalZoomState.isZoomActive = false;
+        globalZoomState.activeImageSrc = null;
+        globalZoomState.activeSetShowZoom = null;
       }
       console.log('ImageWithZoom component unmounted');
     };
@@ -74,7 +101,7 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
   // Handle src changes (when user navigates between rows)
   useEffect(() => {
     // If this is the currently zoomed image, update the state
-    if (currentZoomedSrc === src) {
+    if (globalZoomState.activeImageSrc === src) {
       setShowZoom(true);
     } else if (showZoom) {
       // If we were showing zoom but the src changed, hide it
@@ -107,14 +134,19 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
   useEffect(() => {
     if (showZoom) {
       // Close any other open zoom windows
-      if (currentZoomSetShowZoom && currentZoomedSrc !== src) {
-        currentZoomSetShowZoom(false);
+      if (globalZoomState.activeSetShowZoom && globalZoomState.activeImageSrc !== src) {
+        globalZoomState.activeSetShowZoom(false);
       }
-      currentZoomedSrc = src;
-      currentZoomSetShowZoom = setShowZoom;
-    } else if (currentZoomedSrc === src) {
-      currentZoomedSrc = null;
-      currentZoomSetShowZoom = null;
+      
+      // Update global state
+      globalZoomState.isZoomActive = true;
+      globalZoomState.activeImageSrc = src;
+      globalZoomState.activeSetShowZoom = setShowZoom;
+    } else if (globalZoomState.activeImageSrc === src) {
+      // Clear global state if this component is closing its zoom
+      globalZoomState.isZoomActive = false;
+      globalZoomState.activeImageSrc = null;
+      globalZoomState.activeSetShowZoom = null;
     }
   }, [showZoom, src]);
   
@@ -184,9 +216,19 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
       });
     }
     
-    // Always show this image (even if it's already showing)
+    // If this image is already showing zoom, close it
+    if (showZoom && globalZoomState.activeImageSrc === src) {
+      setShowZoom(false);
+      globalZoomState.isZoomActive = false;
+      globalZoomState.activeImageSrc = null;
+      return;
+    }
+    
+    // Close any other open zoom windows first
+    closeActiveZoom();
+    
+    // Then show this image
     setShowZoom(true);
-    currentZoomedSrc = src;
     
     // Add a global click handler to close when clicking outside
     setTimeout(() => {
@@ -195,7 +237,6 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
         // Only close if clicking outside any image-with-zoom-container
         if (!target.closest('.image-with-zoom-container') && !target.closest('#zoom-container')) {
           setShowZoom(false);
-          currentZoomedSrc = null;
           document.removeEventListener('click', handleGlobalClick);
         }
       };
@@ -239,10 +280,7 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
       style={{ 
         position: 'relative', 
         display: 'inline-block',
-        cursor: 'pointer',
-        border: showZoom ? '2px solid #007bff' : '2px solid transparent',
-        borderRadius: '4px',
-        transition: 'border-color 0.2s'
+        cursor: 'pointer'
       }}
       className="image-with-zoom-container"
       onClick={handleClick}
@@ -319,44 +357,7 @@ export const ImageWithZoom: React.FC<ImageWithZoomProps> = (props) => {
                   }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '5px 10px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                  onClick={() => setShowZoom(false)}
-                >
-                  Close
-                </button>
-              </div>
-              <button
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '30px',
-                  height: '30px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-                onClick={() => setShowZoom(false)}
-              >
-                ×
-              </button>
+              {/* No buttons needed since clicking elsewhere closes the zoom */}
             </div>
           </div>,
           portalRoot

@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\code_files\\PAGridCustomizerV2\\PAGridCustomizerV2.pcfproj": {}
+  },
+  "projects": {
+    "C:\\code_files\\PAGridCustomizerV2\\PAGridCustomizerV2.pcfproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\code_files\\PAGridCustomizerV2\\PAGridCustomizerV2.pcfproj",
+        "projectName": "PAGridCustomizerV2",
+        "projectPath": "C:\\code_files\\PAGridCustomizerV2\\PAGridCustomizerV2.pcfproj",
+        "packagesPath": "C:\\Users\\RalphSchroeder\\.nuget\\packages\\",
+        "outputPath": "C:\\code_files\\PAGridCustomizerV2\\obj\\",
+        "projectStyle": "PackageReference",
+        "UsingMicrosoftNETSdk": false,
+        "configFilePaths": [
+          "C:\\Users\\RalphSchroeder\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net462"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net462": {
+            "targetAlias": "net462",
+            "projectReferences": {}
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net462": {
+          "targetAlias": "net462",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "Microsoft.PowerApps.MSBuild.Pcf": {
+              "target": "Package",
+              "version": "[1.*, )"
+            }
+          }
+        }
+      }
+    }
+  }
+}

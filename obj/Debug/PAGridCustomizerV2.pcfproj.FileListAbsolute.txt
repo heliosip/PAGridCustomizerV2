@@ -1,0 +1,2 @@
+C:\code_files\PAGridCustomizerV2\obj\Debug\PAGridCustomizerV2.pcfproj.AssemblyReference.cache
+C:\code_files\PAGridCustomizerV2\obj\Debug\PAGridCustomizerV2.pcfproj.CoreCompileInputs.cache

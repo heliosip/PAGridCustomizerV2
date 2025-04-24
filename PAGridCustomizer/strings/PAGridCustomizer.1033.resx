@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="PAGridCustomizer" xml:space="preserve">
+    <value>PAGrid Customizer</value>
+  </data>
+  <data name="PAGridCustomizer description" xml:space="preserve">
+    <value>Custom control to modify grid appearance and behavior</value>
+  </data>
+</root>
